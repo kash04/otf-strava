@@ -23,33 +23,52 @@ Use the **Tread lap splits** on the Strava activity for your true run pace. Each
 
 The sync is stateless. A class is skipped only if Strava already has an activity *this tool uploaded* (`external_id` `otf-<id>`) within five minutes of the class start. Other overlapping activities are not treated as duplicates: they are logged and left untouched.
 
-```
-python sync.py --dry-run --list-overlaps --days 60
-```
+`python sync.py --dry-run --list-overlaps --days 60` lists non-sync activities that overlap your classes (useful before a backfill). If Strava rotates the refresh token, it is saved to `.env` locally; in GitHub Actions a warning asks you to update the secret. Classes with no heart-rate telemetry are skipped and retried on the next run; after 48 hours they produce a workflow warning. The tool never creates text-only or manual activities.
 
-lists non-sync activities that overlap your classes (useful before a backfill). If Strava rotates the refresh token, it is saved to `.env` locally; in GitHub Actions a warning asks you to update the secret. Classes with no heart-rate telemetry are skipped and retried on the next run; after 48 hours they produce a workflow warning. The tool never creates text-only or manual activities.
+## Running the sync
 
-## Setup
+### Option A: GitHub Actions (recommended)
 
-Repo secrets (or a local `.env`):
+1. Click [Use this template](https://github.com/kash04/otf-strava/generate) and create a **private** repository. A public fork will expose Actions logs (class times, titles, splat counts, and Strava activity IDs), so keep your copy private.
+2. Create [your own Strava API application](https://www.strava.com/settings/api) with scope `activity:read_all,activity:write`. Do not reuse someone else’s credentials.
+3. In your new repo, go to **Settings → Secrets and variables → Actions** and add: `OTF_EMAIL`, `OTF_PASSWORD`, `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN`.
+4. Done — the workflow runs a few times a day and syncs automatically.
 
-- `OTF_EMAIL` and `OTF_PASSWORD` — your Orangetheory account
-- `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, and `STRAVA_REFRESH_TOKEN` — from **your** Strava API application, with scope `activity:read_all,activity:write`
+Trigger it manually anytime from the **Actions** tab (you can pass `days`, `since`, or `dry_run`).
 
-Do not reuse someone else’s Strava API credentials. Create an app at [https://www.strava.com/settings/api](https://www.strava.com/settings/api).
+**Cron schedule:** The default is `15 13,14,15,23 * * *` UTC — 7:15, 8:15, 9:15 AM and 5:15 PM Central Standard Time (one hour later during daylight time). Edit `.github/workflows/sync.yml` so the job runs shortly after your usual class times; Orangetheory telemetry often appears a few minutes after class ends. A few runs a day stays well within GitHub’s 2,000 free Actions minutes for private repos.
 
-### Scheduled sync and public logs
+The scheduled job is disabled on this public template repo itself, so it will not run here.
 
-A GitHub Actions workflow is included (`workflow_dispatch`). If you add a cron schedule, run it from a **private** repository or private fork. On a public repo, Actions logs are public and will include class times, titles, splat counts, and Strava activity IDs. Keep your secrets and your scheduled sync private.
-
-## Local
+### Option B: Run locally
 
 ```
+git clone https://github.com/kash04/otf-strava.git
+cd otf-strava
 python -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python sync.py --dry-run --days 30 --cache cache
 ```
 
-That writes FIT files to `out/` and a report to `out/report.json`, with no Strava calls. Drop the `--dry-run` flag to upload.
+Create a `.env` file:
+
+```
+OTF_EMAIL=your_otf_email
+OTF_PASSWORD=your_otf_password
+STRAVA_CLIENT_ID=your_client_id
+STRAVA_CLIENT_SECRET=your_client_secret
+STRAVA_REFRESH_TOKEN=your_refresh_token
+```
+
+Sample commands:
+
+```
+python sync.py --dry-run --days 30 --cache cache   # preview: write FIT files, no Strava calls
+python sync.py --days 7                            # last 7 days
+python sync.py --since 2026-01-01                  # classes on/after this date
+python sync.py --only 2026-11-12                   # one class date (Central)
+python sync.py --dry-run --list-overlaps --days 60 # list overlapping non-sync activities
+```
+
+`--dry-run --cache cache` writes FIT files to `out/` and a report to `out/report.json`. Drop `--dry-run` to upload.
 
 ## License
 

@@ -1,9 +1,11 @@
 name: OTF to Strava
 on:
-  # If you add a schedule, run it from a private repo. On a public repo,
-  # Actions logs are public (class times, titles, Strava activity IDs).
-  # schedule:
-  #   - cron: "15 13,14,15,23 * * *"   # UTC; adjust for your class times
+  # Default: a few times a day in UTC. Adjust to shortly after your class times.
+  # 15 13,14,15,23 * * * = 7:15/8:15/9:15 AM and 5:15 PM CST (one hour later in CDT).
+  # On a public repo, Actions logs are public (class times, titles, Strava activity IDs);
+  # run this from a private copy. The job is skipped on the public template repo.
+  schedule:
+    - cron: "15 13,14,15,23 * * *"
   workflow_dispatch:
     inputs:
       days:
@@ -20,6 +22,7 @@ on:
 concurrency: { group: otf-strava, cancel-in-progress: false }
 jobs:
   sync:
+    if: github.repository != 'kash04/otf-strava' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
