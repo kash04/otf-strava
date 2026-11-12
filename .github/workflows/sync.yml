@@ -1,0 +1,40 @@
+name: OTF to Strava
+on:
+  # If you add a schedule, run it from a private repo. On a public repo,
+  # Actions logs are public (class times, titles, Strava activity IDs).
+  # schedule:
+  #   - cron: "15 13,14,15,23 * * *"   # UTC; adjust for your class times
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Days back to check (ignored if 'since' is set)"
+        default: "7"
+      since:
+        description: "Sync classes on/after YYYY-MM-DD (optional, for backfill)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run: build files and list overlaps, upload nothing"
+        type: boolean
+        default: false
+concurrency: { group: otf-strava, cancel-in-progress: false }
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Sync
+        env:
+          OTF_EMAIL: ${{ secrets.OTF_EMAIL }}
+          OTF_PASSWORD: ${{ secrets.OTF_PASSWORD }}
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+          DAYS: ${{ inputs.days || '7' }}
+          SINCE: ${{ inputs.since }}
+          DRY: ${{ inputs.dry_run && '--dry-run --list-overlaps' || '' }}
+        run: python sync.py --days "$DAYS" ${SINCE:+--since "$SINCE"} $DRY

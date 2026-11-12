@@ -1,0 +1,4 @@
+otf-api==0.21.3
+fit-tool==0.9.17
+requests>=2.31
+python-dotenv>=1.0
