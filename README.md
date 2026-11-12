@@ -50,14 +50,10 @@ cd otf-strava
 python -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
-Create a `.env` file:
+Copy [`.env.example`](.env.example) to `.env` and fill in your own values. Do not commit `.env`.
 
 ```
-OTF_EMAIL=your_otf_email
-OTF_PASSWORD=your_otf_password
-STRAVA_CLIENT_ID=your_client_id
-STRAVA_CLIENT_SECRET=your_client_secret
-STRAVA_REFRESH_TOKEN=your_refresh_token
+cp .env.example .env
 ```
 
 Sample commands:
