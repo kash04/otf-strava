@@ -2,6 +2,8 @@
 
 Uploads each [Orangetheory Fitness](https://www.orangetheory.com/) class to [Strava](https://www.strava.com/) as one FIT activity, built from the class telemetry: real heart-rate charts, treadmill pace and incline, rower power and stroke rate, and a lap per station.
 
+![Strava activity with heart rate and treadmill pace from an Orangetheory class](assets/strava-screenshot.png)
+
 This is an unofficial, self-hosted tool. It is **not affiliated with, endorsed by, or associated with Orangetheory Fitness or Strava.** Orangetheory and Strava are trademarks of their respective owners. It fetches your workout data with the community [`otf-api`](https://github.com/NodeJSmith/otf-api) library (also unofficial) and uploads through the official [Strava API](https://developers.strava.com/). You run it with your own accounts, and you must create [your own Strava API application](https://www.strava.com/settings/api).
 
 ## What it does
